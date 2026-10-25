@@ -1,0 +1,26 @@
+{
+  "name": "b6d",
+  "version": "0.1.0",
+  "description": "在 Codex 里用 b6d 生成图片和视频、管理素材、预览短剧工作台。",
+  "author": {
+    "name": "b6d",
+    "url": "https://www.b6d.co"
+  },
+  "homepage": "https://www.b6d.co",
+  "license": "Proprietary",
+  "keywords": ["b6d", "video", "image", "seedance", "mcp"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "b6d",
+    "shortDescription": "b6d 图片/视频生成、素材库与短剧工作台",
+    "longDescription": "在 Codex 里直接调用 b6d：按文字或参考图生成图片和视频，查看任务进度并把成片下载到本地；上传、搜索、整理素材库；查看短剧工作台的项目、分集和镜头清单，并打开对应的工作台画布。需要一个 b6d API Key。",
+    "developerName": "b6d",
+    "category": "Creativity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://www.b6d.co",
+    "defaultPrompt": [
+      "查一下我的 b6d 积分余额",
+      "用 b6d 生成一张 16:9 的雨夜街景图"
+    ]
+  }
+}
