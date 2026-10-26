@@ -5,7 +5,9 @@ from typing import Any
 from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
 
+from b6d_mcp import terminal
 from b6d_mcp.api import B6dApi
+from b6d_mcp.config import configure_command
 from b6d_mcp.drama_tools import register_drama_tools
 from b6d_mcp.generation_tools import register_generation_tools
 from b6d_mcp.media_tools import register_media_tools
@@ -13,6 +15,7 @@ from b6d_mcp.media_tools import register_media_tools
 DEFAULT_POLL_INTERVAL_SECONDS = 5.0
 
 INSTRUCTIONS = """b6d 是 AI 图片/视频生成服务。
+- 提示未配置 API Key 时，调用 setup_api_key 打开终端让用户粘贴 Key，不要让用户把 Key 发到对话里。
 - 生成任务是异步的：generate_video / generate_image 立即返回任务 id，再用 wait_task 等结果。
 - 参考素材先用 upload_media 上传本地文件，或用 search_media / list_media 找已有素材，把 url 传给生成工具。
 - 生成会消耗积分。批量提交、长视频或 1080p 之前，先告诉用户预计数量并确认；可用 get_balance 查余额。
@@ -36,6 +39,16 @@ def _register_account_tools(server: MCPServer, api: B6dApi) -> None:
     async def list_models() -> dict[str, Any]:
         """列出当前 API Key 可以使用的图片/视频模型 key。"""
         return await api.get("/api/account/model-offering")
+
+    @server.tool(annotations=ToolAnnotations(read_only_hint=False, open_world_hint=False))
+    async def setup_api_key() -> str:
+        """打开一个终端窗口，让用户粘贴 b6d API Key 并保存到本机。Key 不经过对话。"""
+        if terminal.open_configure_terminal():
+            return (
+                "已打开终端窗口。请用户在 b6d 网站「API 密钥」页面创建 Key（查看短剧工作台需勾选 canvas:read），"
+                "粘贴到终端里回车。看到「已保存」后回到这里继续，不用重启。"
+            )
+        return f"没能自动打开终端。请让用户自己打开终端运行：{configure_command()}"
 
     @server.tool(annotations=READ_ONLY)
     async def get_balance() -> dict[str, Any]:

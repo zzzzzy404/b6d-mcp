@@ -4,6 +4,26 @@
 
 ## 安装
 
+### 让 Codex 帮你装（推荐）
+
+把下面这段发给 Codex：
+
+```text
+帮我安装 b6d 插件，让我可以在这里生成图片和视频、管理素材、预览短剧工作台。
+
+1. 检查本机是否已安装 uv（`uv --version`），没有就执行 `curl -LsSf https://astral.sh/uv/install.sh | sh`
+2. 如果 `codex mcp list` 里已有名为 b6d 的服务（旧版手动添加的），执行 `codex mcp remove b6d`
+3. 添加插件市场：执行 `codex plugin marketplace add zzzzzy404/b6d-mcp`
+4. 安装插件：执行 `codex plugin add b6d@b6d`
+5. 执行下面的命令，它会打开一个新的终端窗口等我粘贴 API Key。提醒我先到 b6d 网站「API 密钥」页面创建 Key（查看短剧工作台需勾选 `canvas:read`），复制后粘贴到那个终端窗口里回车。不要让我把 Key 发到对话里，也不要替我输入：
+   `uvx --from "git+https://github.com/zzzzzy404/b6d-mcp#subdirectory=plugins/b6d" b6d-mcp open-configure`
+6. 等我说保存好了，提醒我新建一个任务（或重启 Codex），然后调用 b6d 查一下积分余额，能查到就告诉我可以开始创作了。
+```
+
+macOS 第一次打开终端时，系统可能询问是否允许控制「终端」，选允许即可。
+
+### 手动安装
+
 1. 安装 uv（已装可跳过）：
 
    ```bash
@@ -16,14 +36,14 @@
    codex mcp remove b6d
    ```
 
-   在 Codex 里添加插件市场并安装 b6d 插件：
+3. 在 Codex 里添加插件市场并安装 b6d 插件：
 
    ```bash
    codex plugin marketplace add zzzzzy404/b6d-mcp
    codex plugin add b6d@b6d
    ```
 
-3. 在 b6d 网站「API 密钥」页面创建 Key（勾选需要的权限，查看短剧工作台需要 `canvas:read`），然后保存到本机：
+4. 在 b6d 网站「API 密钥」页面创建 Key（勾选需要的权限，查看短剧工作台需要 `canvas:read`），然后保存到本机：
 
    ```bash
    uvx --from "git+https://github.com/zzzzzy404/b6d-mcp#subdirectory=plugins/b6d" b6d-mcp configure
@@ -31,9 +51,9 @@
 
    Key 保存在 `~/.b6d/config.json`（权限 600），与 b6d CLI 共用。也可以改用环境变量 `B6D_API_KEY`。
 
-4. 重启 Codex。首次启动会自动安装依赖，大约十几秒。
+5. 重启 Codex。首次启动会自动安装依赖，大约十几秒。
 
-没配 Key 时调用任何工具，都会返回带本机路径的 `configure` 命令，照着运行即可。
+没配 Key 时调用任何工具，Codex 会调用 `setup_api_key` 打开终端窗口让你粘贴 Key，保存后直接重试，不用重启。
 
 ## 更新
 
@@ -50,6 +70,7 @@ codex plugin marketplace upgrade
 plugins/b6d/
   .codex-plugin/plugin.json        插件信息（名称、版本、介绍）
   .mcp.json                        Codex 如何启动 MCP 服务
+  assets/                          插件图标（来自 b6d 品牌套件）
   scripts/launch.sh                找到 uv 并启动服务
   pyproject.toml / uv.lock         依赖，锁定版本
   src/b6d_mcp/                     MCP 服务代码

@@ -131,3 +131,9 @@ def test_configure_warns_about_manual_b6d_server(isolated_home, monkeypatch, cap
 
     assert cli.configure() == 0
     assert "codex mcp remove b6d" in capsys.readouterr().out
+
+
+def test_plugin_icons_exist():
+    manifest = json.loads((PLUGIN_DIR / ".codex-plugin" / "plugin.json").read_text())
+    for field in ("composerIcon", "logo", "logoDark"):
+        assert (PLUGIN_DIR / manifest["interface"][field]).is_file(), field

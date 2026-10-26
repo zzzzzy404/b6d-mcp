@@ -18,6 +18,10 @@
     "category": "Creativity",
     "capabilities": ["Read", "Write"],
     "websiteURL": "https://www.b6d.co",
+    "brandColor": "#FF4D00",
+    "composerIcon": "./assets/composer-icon.svg",
+    "logo": "./assets/logo.png",
+    "logoDark": "./assets/logo-dark.png",
     "defaultPrompt": [
       "查一下我的 b6d 积分余额",
       "用 b6d 生成一张 16:9 的雨夜街景图"

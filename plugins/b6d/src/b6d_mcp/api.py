@@ -2,7 +2,7 @@
 import mimetypes
 from pathlib import Path
 from urllib.parse import quote
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import httpx
 from mcp.server.mcpserver.exceptions import ToolError
@@ -42,21 +42,32 @@ def _error_detail(response: httpx.Response) -> str:
 
 
 class B6dApi:
-    def __init__(self, endpoint: str, api_key: str, transport: Optional[httpx.AsyncBaseTransport] = None):
+    def __init__(
+        self,
+        endpoint: str,
+        api_key: str,
+        transport: Optional[httpx.AsyncBaseTransport] = None,
+        key_loader: Optional[Callable[[], str]] = None,
+    ):
         self._endpoint = endpoint.rstrip("/")
         self._api_key = api_key
         self._transport = transport
+        # 中文注释：启动时还没配 Key 的话，用户随后在终端里保存，下次调用重新读取，不用重启 Codex
+        self._key_loader = key_loader
 
     @classmethod
     def from_config(cls) -> "B6dApi":
         """服务地址固定为生产环境；API Key 读 B6D_API_KEY 或 ~/.b6d/config.json。"""
-        return cls(endpoint=get_endpoint(), api_key=get_api_key())
+        return cls(endpoint=get_endpoint(), api_key=get_api_key(), key_loader=get_api_key)
 
     def _ensure_config(self) -> None:
+        if not self._api_key and self._key_loader:
+            self._api_key = self._key_loader()
         if not self._api_key:
             raise B6dApiError(
-                f"未配置 b6d API Key。请让用户在终端运行：{configure_command()} ，"
-                f"或设置环境变量 {API_KEY_ENV}，然后重启 Codex"
+                "未配置 b6d API Key。请调用 setup_api_key 工具，它会打开一个终端窗口让用户粘贴 Key，"
+                f"保存后直接重试即可。打不开终端时，请让用户在终端运行：{configure_command()} ，"
+                f"或设置环境变量 {API_KEY_ENV}"
             )
 
     def _client(self, timeout: float, with_auth: bool) -> httpx.AsyncClient:

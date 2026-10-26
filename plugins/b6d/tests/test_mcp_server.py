@@ -106,6 +106,7 @@ async def test_lists_expected_tools():
         "create_folder",
         "list_models",
         "get_balance",
+        "setup_api_key",
         "list_drama_projects",
         "list_drama_episodes",
         "preview_episode",
@@ -214,9 +215,47 @@ async def test_missing_api_key_reports_how_to_configure():
     result = await call(server, "get_balance")
 
     assert result.is_error
-    assert "B6D_API_KEY" in text_of(result)
+    assert "setup_api_key" in text_of(result)
     assert "b6d-mcp configure" in text_of(result)
     assert backend.requests == []
+
+
+@pytest.mark.anyio
+async def test_api_key_saved_after_start_is_picked_up_without_restart():
+    backend = FakeBackend({("GET", "/api/account/balance"): (200, {"available": 1})})
+    saved = {"key": ""}
+    api = B6dApi(endpoint=ENDPOINT, api_key="", key_loader=lambda: saved["key"], transport=httpx.MockTransport(backend))
+    server = build_server(api, poll_interval=0)
+
+    assert (await call(server, "get_balance")).is_error
+    saved["key"] = "sk-late"
+    assert not (await call(server, "get_balance")).is_error
+    assert backend.last("GET", "/api/account/balance").headers["Authorization"] == "Bearer sk-late"
+
+
+@pytest.mark.anyio
+async def test_setup_api_key_opens_terminal(monkeypatch):
+    from b6d_mcp import terminal
+
+    monkeypatch.setattr(terminal, "open_configure_terminal", lambda: True)
+    server, _ = make_server({}, api_key="")
+
+    result = await call(server, "setup_api_key")
+
+    assert not result.is_error
+    assert "终端" in text_of(result)
+
+
+@pytest.mark.anyio
+async def test_setup_api_key_falls_back_to_command(monkeypatch):
+    from b6d_mcp import terminal
+
+    monkeypatch.setattr(terminal, "open_configure_terminal", lambda: False)
+    server, _ = make_server({}, api_key="")
+
+    result = await call(server, "setup_api_key")
+
+    assert "b6d-mcp configure" in text_of(result)
 
 
 @pytest.mark.anyio
