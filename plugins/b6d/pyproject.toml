@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "b6d-mcp"
 # 中文注释：与 .codex-plugin/plugin.json 的 version 保持一致（有测试检查）
-version = "0.1.0"
+version = "0.1.1"
 description = "b6d MCP 服务：让 Codex 调用 b6d 生成图片/视频、管理素材、预览短剧工作台"
 requires-python = ">=3.10"
 dependencies = [

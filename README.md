@@ -10,7 +10,13 @@
    curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
-2. 在 Codex 里添加插件市场并安装 b6d 插件：
+2. 如果之前按旧方式手动添加过 b6d MCP（`codex mcp add b6d ...`），先删掉，否则 Codex 会跳过插件里的 b6d：
+
+   ```bash
+   codex mcp remove b6d
+   ```
+
+   在 Codex 里添加插件市场并安装 b6d 插件：
 
    ```bash
    codex plugin marketplace add zzzzzy404/b6d-mcp
@@ -61,4 +67,4 @@ uv run pytest
 
 在 Codex 里联调：用本地路径添加插件市场并安装，再只改已安装副本 `~/.codex/plugins/cache/b6d/b6d/<版本>/.mcp.json`，在 `mcpServers.b6d` 下加 `"env": {"B6D_DEV_ENDPOINT": "http://localhost:8241"}`。重新安装插件即恢复为生产地址。
 
-注意：`~/.codex/config.toml` 里不能再有手动添加的同名 `[mcp_servers.b6d]`，否则 Codex 会跳过插件里的 b6d 服务。
+注意：`~/.codex/config.toml` 里不能再有手动添加的同名 `[mcp_servers.b6d]`，否则 Codex 会跳过插件里的 b6d 服务。`b6d-mcp configure` 检测到这种情况会提示运行 `codex mcp remove b6d`。

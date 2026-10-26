@@ -1,6 +1,7 @@
 """配置：服务地址固定为 b6d 生产环境；API Key 读环境变量 B6D_API_KEY 或 ~/.b6d/config.json。"""
 import json
 import os
+import re
 from pathlib import Path
 
 PRODUCTION_ENDPOINT = "https://api.b6d.co"
@@ -8,6 +9,8 @@ PRODUCTION_ENDPOINT = "https://api.b6d.co"
 DEV_ENDPOINT_ENV = "B6D_DEV_ENDPOINT"
 API_KEY_ENV = "B6D_API_KEY"
 API_KEY_PREFIX = "sk-"
+# 中文注释：~/.codex/config.toml 里手动加过的同名服务会让 Codex 跳过插件里的 b6d
+_MANUAL_B6D_SERVER = re.compile(r'^\s*\[mcp_servers\.(b6d|"b6d")\]\s*$', re.MULTILINE)
 
 
 def plugin_dir() -> Path:
@@ -54,3 +57,17 @@ def save_api_key(api_key: str) -> Path:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
     path.chmod(0o600)
     return path
+
+
+def codex_config_file() -> Path:
+    codex_home = os.environ.get("CODEX_HOME")
+    return Path(codex_home) / "config.toml" if codex_home else Path.home() / ".codex" / "config.toml"
+
+
+def has_manual_codex_b6d_server() -> bool:
+    """Codex 配置里是否有手动添加的 [mcp_servers.b6d]（旧版 `codex mcp add b6d` 留下的）。"""
+    try:
+        text = codex_config_file().read_text()
+    except OSError:
+        return False
+    return bool(_MANUAL_B6D_SERVER.search(text))

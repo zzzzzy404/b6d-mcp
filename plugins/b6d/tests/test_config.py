@@ -17,6 +17,7 @@ def isolated_home(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.delenv(config.API_KEY_ENV, raising=False)
     monkeypatch.delenv(config.DEV_ENDPOINT_ENV, raising=False)
+    monkeypatch.delenv("CODEX_HOME", raising=False)
     return tmp_path
 
 
@@ -80,3 +81,53 @@ def test_mcp_manifest_does_not_forward_endpoint_override():
     servers = json.loads((PLUGIN_DIR / ".mcp.json").read_text())["mcpServers"]
     assert config.DEV_ENDPOINT_ENV not in servers["b6d"]["env_vars"]
     assert config.API_KEY_ENV in servers["b6d"]["env_vars"]
+
+
+@pytest.mark.parametrize(
+    "toml_text",
+    [
+        '[mcp_servers.b6d]\ncommand = "b6d"\nargs = ["mcp"]\n',
+        'model = "x"\n\n  [mcp_servers."b6d"]\ncommand = "b6d"\n',
+    ],
+)
+def test_detects_manually_added_b6d_server(isolated_home, toml_text):
+    (isolated_home / ".codex").mkdir()
+    (isolated_home / ".codex" / "config.toml").write_text(toml_text)
+    assert config.has_manual_codex_b6d_server()
+
+
+@pytest.mark.parametrize(
+    "toml_text",
+    [
+        '[mcp_servers.b6d-other]\ncommand = "x"\n',
+        '[mcp_servers.b6d.env]\nFOO = "1"\n# [mcp_servers.b6d]\n',
+        "",
+    ],
+)
+def test_ignores_other_codex_servers(isolated_home, toml_text):
+    (isolated_home / ".codex").mkdir()
+    (isolated_home / ".codex" / "config.toml").write_text(toml_text)
+    assert not config.has_manual_codex_b6d_server()
+
+
+def test_no_codex_config_means_no_conflict():
+    assert not config.has_manual_codex_b6d_server()
+
+
+def test_respects_codex_home(tmp_path, monkeypatch):
+    codex_home = tmp_path / "custom-codex"
+    codex_home.mkdir()
+    (codex_home / "config.toml").write_text("[mcp_servers.b6d]\n")
+    monkeypatch.setenv("CODEX_HOME", str(codex_home))
+    assert config.has_manual_codex_b6d_server()
+
+
+def test_configure_warns_about_manual_b6d_server(isolated_home, monkeypatch, capsys):
+    from b6d_mcp import __main__ as cli
+
+    (isolated_home / ".codex").mkdir()
+    (isolated_home / ".codex" / "config.toml").write_text("[mcp_servers.b6d]\n")
+    monkeypatch.setattr(cli.getpass, "getpass", lambda prompt: "sk-test")
+
+    assert cli.configure() == 0
+    assert "codex mcp remove b6d" in capsys.readouterr().out

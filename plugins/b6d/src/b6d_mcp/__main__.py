@@ -2,7 +2,7 @@
 import getpass
 import sys
 
-from b6d_mcp.config import save_api_key
+from b6d_mcp.config import codex_config_file, has_manual_codex_b6d_server, save_api_key
 
 
 def configure() -> int:
@@ -13,6 +13,11 @@ def configure() -> int:
         print(f"未保存：{exc}", file=sys.stderr)
         return 1
     print(f"已保存到 {path}，重启 Codex 后生效")
+    if has_manual_codex_b6d_server():
+        print(
+            f"注意：{codex_config_file()} 里有手动添加的 b6d MCP 服务，Codex 会因此跳过插件里的 b6d。"
+            "请先运行 codex mcp remove b6d ，再重启 Codex。"
+        )
     return 0
 
 
